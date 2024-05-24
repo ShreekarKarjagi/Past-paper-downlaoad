@@ -1,0 +1,76 @@
+import os
+from Download_script import download_pdf
+import PyPDF2
+
+
+def merge_year(main_path, current_year):
+    folder_path = os.path.join(main_path, str(current_year))
+    pdf_list = [f for f in os.listdir(folder_path)]
+    pdf_path_list = [os.path.join(folder_path, f) for f in pdf_list]
+    merger = PyPDF2.PdfMerger()
+
+    for pdf in pdf_path_list:
+        merger.append(pdf)
+    merged_path = os.path.join(main_path, f'{current_year}'".pdf")
+
+    with open(merged_path, 'wb') as output_file:
+        merger.write(output_file)
+
+    print("successfully combined "f'{current_year}')
+
+
+def year_download(year: int, paper_value: int, main_path: str, subject_code: int):
+    folder_path = os.path.join(main_path, f'{year}')
+    os.makedirs(folder_path, exist_ok=True)
+    # selection of syllabus
+    subject_name_code = 0
+    if subject_code == 9701:
+        subject_name_code = 'chemistry-9701'
+    elif subject_code == 9702:
+        subject_name_code = 'physics-9702'
+    elif subject_code == 9709:
+        subject_name_code = 'mathematics-9709'
+    elif subject_code == 9618:
+        subject_name_code = 'computer-science-9618'
+    elif subject_code == 9231:
+        subject_name_code = 'mathematics-further-9231'
+    elif subject_code == 9700:
+        subject_name_code = 'biology-9700'
+    elif subject_code == 9708:
+        subject_name_code = 'economics-9708'
+    # download of 7 past papers dependent on given parameters
+
+    url = "https://bestexamhelp.com/exam/cambridge-international-a-level/"f'{subject_name_code}'"/"f'{year}'"/"f'{subject_code}'"_m"f'{year - 2000}'"_qp_"f'{paper_value}'"2.pdf"
+    save_path = folder_path
+    filename = "9701_12_F_M_" f'{year}'".pdf"
+    download_pdf(url, save_path, filename)
+
+    for variant in range(3):
+        url = "https://bestexamhelp.com/exam/cambridge-international-a-level/"f'{subject_name_code}'"/"f'{year}'"/"f'{subject_code}'"_s"f'{year - 2000}'"_qp_"f'{paper_value}'""f'{variant + 1}'".pdf"
+        save_path = folder_path
+        filename = "9701_1" f'{variant + 1}' "_M_J_" f'{year}'".pdf"
+        download_pdf(url, save_path, filename)
+
+    for variant in range(3):
+        url = "https://bestexamhelp.com/exam/cambridge-international-a-level/"f'{subject_name_code}'"/"f'{year}'"/"f'{subject_code}'"_w"f'{year - 2000}'"_qp_"f'{paper_value}'""f'{variant + 1}'".pdf"
+        save_path = folder_path
+        filename = "9701_1" f'{variant + 1}' "_O_N_" f'{year}'".pdf"
+        download_pdf(url, save_path, filename)
+
+    print(f'{year}'" downloaded successfully")
+    if combine == 'Y':
+        merge_year(main_path, year)
+
+
+# prompting user for their inputs
+loc = input(" path you would like to store: ")
+location = r""f'{loc}'""
+subject = int(input("Input the subject code: "))
+year_num = int(input("Number of years ( NOTE from 2023 downwars & inclusive ): "))
+paper = int(input("Which paper would you like to store(p1-->1,p2-->2): "))
+start_year = 2023 - year_num
+combine = input("would you like to combine your papers into one file (Y for yes N for no): ")
+# downloading the respective years
+for i in range(year_num + 1):
+    year_download(start_year, paper, location, subject)
+    start_year = start_year + 1
