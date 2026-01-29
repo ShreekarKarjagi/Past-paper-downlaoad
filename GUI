@@ -1,1 +1,278 @@
+import os
+from tkinter import filedialog
+
+import customtkinter as ctk
+from PIL import Image, ImageTk
+
+# Set up appearance
+ctk.set_appearance_mode("Light")
+ctk.set_default_color_theme("blue")
+
+# Create main application window
+root = ctk.CTk()
+root.title("Past Paper Downloader & Merger")
+root.geometry("800x600")
+root.minsize(800, 600)
+
+# Load custom icons
+icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons")
+try:
+    home_icon = ImageTk.PhotoImage(Image.open(os.path.join(icon_path, "home.png")).resize((24, 24)))
+    input_icon = ImageTk.PhotoImage(Image.open(os.path.join(icon_path, "input.png")).resize((24, 24)))
+    progress_icon = ImageTk.PhotoImage(Image.open(os.path.join(icon_path, "progress.png")).resize((24, 24)))
+    help_icon = ImageTk.PhotoImage(Image.open(os.path.join(icon_path, "help.png")).resize((24, 24)))
+except:
+    # Fallback if icons are not available
+    home_icon = None
+    input_icon = None
+    progress_icon = None
+    help_icon = None
+
+# Create sidebar frame
+sidebar = ctk.CTkFrame(root, width=150, corner_radius=0)
+sidebar.pack(side="left", fill="y")
+
+# Navigation buttons
+nav_buttons = [
+    ("Home", home_icon, "home"),
+    ("Input", input_icon, "input"),
+    ("Progress", progress_icon, "progress"),
+    ("Help", help_icon, "help")
+]
+
+current_page = "home"
+
+
+def show_page(page):
+    global current_page
+    for btn in nav_buttons:
+        btn_widget = btn[2]
+        if btn_widget == page:
+            btn_widget.configure(fg_color="#3B8ED0")
+        else:
+            btn_widget.configure(fg_color="#E5E5E5")
+
+    # Hide all pages
+    for page_name in ["home_frame", "input_frame", "progress_frame", "help_frame"]:
+        if page_name in globals():
+            globals()[page_name].pack_forget()
+
+    # Show selected page
+    if page == "home":
+        home_frame.pack(fill="both", expand=True, padx=20, pady=20)
+    elif page == "input":
+        input_frame.pack(fill="both", expand=True, padx=20, pady=20)
+    elif page == "progress":
+        progress_frame.pack(fill="both", expand=True, padx=20, pady=20)
+    elif page == "help":
+        help_frame.pack(fill="both", expand=True, padx=20, pady=20)
+
+    current_page = page
+
+
+for text, icon, name in nav_buttons:
+    btn = ctk.CTkButton(
+        sidebar,
+        text=text,
+        image=icon,
+        command=lambda p=name: show_page(p),
+        fg_color="#E5E5E5",
+        hover_color="#D1D5DA",
+        anchor="w",
+        height=40
+    )
+    btn.pack(fill="x", padx=10, pady=5)
+    # Store reference for global access
+    globals()[name] = btn
+
+# Create content pages
+
+# Home Page
+home_frame = ctk.CTkFrame(root)
+home_frame.pack(fill="both", expand=True, padx=20, pady=20)
+
+home_title = ctk.CTkLabel(home_frame, text="Welcome to Past Paper Downloader", font=ctk.CTkFont(size=24, weight="bold"))
+home_title.pack(pady=(20, 10))
+
+home_desc = ctk.CTkLabel(home_frame,
+                         text="This application helps you download and organize past papers for your exams.",
+                         font=ctk.CTkFont(size=14))
+home_desc.pack(anchor="w", pady=(0, 20))
+
+# Input Page
+input_frame = ctk.CTkFrame(root)
+input_frame.pack(fill="both", expand=True, padx=20, pady=20)
+
+input_title = ctk.CTkLabel(input_frame, text="Download Configuration", font=ctk.CTkFont(size=20, weight="bold"))
+input_title.pack(pady=(20, 10))
+
+# Input form section
+form_frame = ctk.CTkScrollableFrame(input_frame)
+form_frame.pack(fill="both", expand=True, padx=20, pady=20)
+
+# Row 1: Folder selection
+folder_frame = ctk.CTkFrame(form_frame)
+folder_frame.pack(fill="x", pady=10)
+
+ctk.CTkLabel(folder_frame, text="Download Folder:").pack(side="left", padx=(0, 10))
+loc_entry = ctk.CTkEntry(folder_frame, width=200)
+loc_entry.pack(side="left", padx=(0, 10))
+browse_button = ctk.CTkButton(folder_frame, text="Browse", command=lambda: select_folder(loc_entry))
+browse_button.pack(side="left")
+
+# Row 2: Subject selection
+subject_frame = ctk.CTkFrame(form_frame)
+subject_frame.pack(fill="x", pady=10)
+
+ctk.CTkLabel(subject_frame, text="Subject:").pack(side="left", padx=(0, 10))
+subject_combobox = ctk.CTkComboBox(subject_frame,
+                                   values=['9701 - Chemistry',
+                                           '9702 - Physics',
+                                           '9709 - Mathematics',
+                                           '9618 - Computer Science',
+                                           '9231 - Further Mathematics',
+                                           '9700 - Biology',
+                                           '9708 - Economics'])
+subject_combobox.pack(side="left", fill="x", expand=True)
+
+# Row 3: Year selection
+year_frame = ctk.CTkFrame(form_frame)
+year_frame.pack(fill="x", pady=10)
+
+ctk.CTkLabel(year_frame, text="Number of Years:").pack(side="left", padx=(0, 10))
+year_num_entry = ctk.CTkEntry(year_frame, width=100)
+year_num_entry.pack(side="left")
+
+# Row 4: Paper selection
+paper_frame = ctk.CTkFrame(form_frame)
+paper_frame.pack(fill="x", pady=10)
+
+ctk.CTkLabel(paper_frame, text="Paper Number:").pack(side="left", padx=(0, 10))
+paper_combobox = ctk.CTkComboBox(paper_frame, values=['1', '2', '3', '4', '5'])
+paper_combobox.pack(side="left", fill="x", expand=True)
+
+# Row 5: Combine option
+combine_frame = ctk.CTkFrame(form_frame)
+combine_frame.pack(fill="x", pady=10)
+
+combine_var = ctk.BooleanVar()
+ctk.CTkCheckBox(combine_frame, text="Combine papers into one file", variable=combine_var).pack(anchor="w")
+
+# Action buttons
+action_frame = ctk.CTkFrame(input_frame)
+action_frame.pack(fill="x", pady=20)
+
+
+# Define the on_submit function
+def on_submit():
+    folder = loc_entry.get()
+    subject = subject_combobox.get()
+    years = year_num_entry.get()
+    paper = paper_combobox.get()
+    combine = combine_var.get()
+
+    if not folder or not subject or not years or not paper:
+        ctk.CTkMessagebox(title="Error", message="Please fill in all fields", icon="cancel")
+        return
+
+    try:
+        years = int(years)
+        if years <= 0:
+            raise ValueError
+    except ValueError:
+        ctk.CTkMessagebox(title="Error", message="Number of years must be a positive integer", icon="cancel")
+        return
+
+    # Here you would add your download logic
+    print(f"Starting download with parameters:")
+    print(f"Folder: {folder}")
+    print(f"Subject: {subject}")
+    print(f"Years: {years}")
+    print(f"Paper: {paper}")
+    print(f"Combine: {combine}")
+
+    # Update progress page
+    progress_info.configure(text=f"Downloading {years} years of {subject} paper {paper}")
+    progress_bar.set(0.0)
+    progress_label.configure(text="Progress: 0/0")
+
+    # Show progress page
+    show_page("progress")
+
+
+# Define the on_cancel function
+def on_cancel():
+    # Implementation would depend on your download logic
+    print("Download cancelled")
+    progress_info.configure(text="Download cancelled")
+    progress_bar.set(0.0)
+    progress_label.configure(text="Progress: 0/0")
+
+
+# Define the on_reset function
+def on_reset():
+    loc_entry.delete(0, ctk.END)
+    subject_combobox.set('')
+    year_num_entry.delete(0, ctk.END)
+    paper_combobox.set('')
+    combine_var.set(False)
+    show_page("home")
+
+
+ctk.CTkButton(action_frame, text="Submit", command=on_submit, width=100).pack(side="left", padx=20)
+ctk.CTkButton(action_frame, text="Cancel", command=on_cancel, width=100).pack(side="left", padx=20)
+ctk.CTkButton(action_frame, text="Reset", command=on_reset, width=100).pack(side="left", padx=20)
+
+# Progress Page
+progress_frame = ctk.CTkFrame(root)
+progress_frame.pack(fill="both", expand=True, padx=20, pady=20)
+
+progress_title = ctk.CTkLabel(progress_frame, text="Download Progress", font=ctk.CTkFont(size=20, weight="bold"))
+progress_title.pack(pady=(20, 10))
+
+progress_info = ctk.CTkLabel(progress_frame, text="Your download will appear here once started.")
+progress_info.pack(pady=10)
+
+progress_bar = ctk.CTkProgressBar(progress_frame, width=400)
+progress_bar.pack(pady=10)
+progress_bar.set(0.0)
+
+progress_label = ctk.CTkLabel(progress_frame, text="Progress: 0/0")
+progress_label.pack(pady=10)
+
+# Help/Instructions Page
+help_frame = ctk.CTkFrame(root)
+help_frame.pack(fill="both", expand=True, padx=20, pady=20)
+
+help_title = ctk.CTkLabel(help_frame, text="Instructions", font=ctk.CTkFont(size=20, weight="bold"))
+help_title.pack(pady=(20, 10))
+
+instructions = [
+    "1. Select a download folder where your files will be saved.",
+    "2. Choose the subject you need from the dropdown menu.",
+    "3. Specify how many years of past papers you want (from most recent).",
+    "4. Select the paper number you want to download.",
+    "5. Choose whether to combine all papers into one file.",
+    "6. Click 'Submit' to start the download process.",
+    "7. Monitor progress on the Progress page."
+]
+
+instructions_text = "\n".join(instructions)
+help_text = ctk.CTkLabel(help_frame, text=instructions_text, font=ctk.CTkFont(size=14), justify="left")
+help_text.pack(anchor="w", pady=10)
+
+
+# Function to select folder
+def select_folder(entry):
+    folder_selected = filedialog.askdirectory()
+    if folder_selected:
+        entry.delete(0, ctk.END)
+        entry.insert(0, folder_selected)
+
+
+# Start with home page
+show_page("home")
+
+# Start the application
+root.mainloop()
 
