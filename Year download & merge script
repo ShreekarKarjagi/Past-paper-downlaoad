@@ -1,11 +1,14 @@
 import os
-import tkinter as tk
-from tkinter import ttk
-import requests
 import PyPDF2
+import requests
+
+# Global variables for progress tracking
+completed_tasks = 0
+total_tasks = 0
 
 
-def download_pdf(url: str, save_path: str, filename: str):
+def download_pdf(url: str, save_path: str, filename: str, progress_callback):
+    global completed_tasks
     file_path = os.path.join(save_path, filename)
     os.makedirs(save_path, exist_ok=True)
 
@@ -15,18 +18,20 @@ def download_pdf(url: str, save_path: str, filename: str):
     with open(file_path, 'wb') as f:
         f.write(response.content)
 
-    print(f'{filename}'" saved to " f'{file_path}')
+    print(f"{filename} saved to {file_path}")
+    completed_tasks += 1
+    progress_callback(completed_tasks, total_tasks)
 
 
 def merge_year(main_path, current_year):
     folder_path = os.path.join(main_path, str(current_year))
-    pdf_list = [f for f in os.listdir(folder_path)]
+    pdf_list = [f for f in os.listdir(folder_path) if f.endswith('.pdf')]
     pdf_path_list = [os.path.join(folder_path, f) for f in pdf_list]
     merger = PyPDF2.PdfMerger()
 
     for pdf in pdf_path_list:
         merger.append(pdf)
-    merged_path = os.path.join(main_path, f'{current_year}.pdf')
+    merged_path = os.path.join(main_path, f"{current_year}.pdf")
 
     with open(merged_path, 'wb') as output_file:
         merger.write(output_file)
@@ -34,91 +39,53 @@ def merge_year(main_path, current_year):
     print(f"Successfully combined {current_year}")
 
 
-def year_download(year, paper_value, main_path, subject_code: int):
-    folder_path = os.path.join(main_path, f'{year}')
-    os.makedirs(folder_path, exist_ok=True)
-    # selection of syllabus
-    subject_name_code = ""
-    if subject_code == 9701:
-        subject_name_code = 'chemistry-9701'
-    elif subject_code == 9702:
-        subject_name_code = 'physics-9702'
-    elif subject_code == 9709:
-        subject_name_code = 'mathematics-9709'
-    elif subject_code == 9618:
-        subject_name_code = 'computer-science-9618'
-    elif subject_code == 9231:
-        subject_name_code = 'mathematics-further-9231'
-    elif subject_code == 9700:
-        subject_name_code = 'biology-9700'
-    elif subject_code == 9708:
-        subject_name_code = 'economics-9708'
+def merge_years(main_path, subject_name_code: str, paper, year_num):
+    pdf_list = [f for f in os.listdir(main_path) if f.endswith('.pdf')]
+    pdf_path_list = [os.path.join(main_path, f) for f in pdf_list]
+    merger = PyPDF2.PdfMerger()
+    for pdf in pdf_path_list:
+        merger.append(pdf)
+    year_range = f"2023-{2023 - year_num}"
+    subject_code = subject_name_code.upper()
+    file_name = f"{subject_code} P{paper} {year_range}.pdf"
+    merged_path = os.path.join(main_path, file_name)
 
-    # download of 7 past papers dependent on given parameters
+    with open(merged_path, 'wb') as outputfile:
+        merger.write(outputfile)
+
+
+def year_download(year, paper_value: int, main_path, subject_code: int, subject_name_code, progress_callback):
+    folder_path = os.path.join(main_path, f"{year}")
+    os.makedirs(folder_path, exist_ok=True)
+
     url = f"https://bestexamhelp.com/exam/cambridge-international-a-level/{subject_name_code}/{year}/{subject_code}_m{year - 2000}_qp_{paper_value}2.pdf"
     save_path = folder_path
     filename = f"{subject_code}_12_F_M_{year}.pdf"
-    download_pdf(url, save_path, filename)
+    download_pdf(url, save_path, filename, progress_callback)
 
     for variant in range(3):
         url = f"https://bestexamhelp.com/exam/cambridge-international-a-level/{subject_name_code}/{year}/{subject_code}_s{year - 2000}_qp_{paper_value}{variant + 1}.pdf"
         filename = f"{subject_code}_1{variant + 1}_M_J_{year}.pdf"
-        download_pdf(url, save_path, filename)
+        download_pdf(url, save_path, filename, progress_callback)
 
     for variant in range(3):
         url = f"https://bestexamhelp.com/exam/cambridge-international-a-level/{subject_name_code}/{year}/{subject_code}_w{year - 2000}_qp_{paper_value}{variant + 1}.pdf"
         filename = f"{subject_code}_1{variant + 1}_O_N_{year}.pdf"
-        download_pdf(url, save_path, filename)
+        download_pdf(url, save_path, filename, progress_callback)
 
     print(f"{year} downloaded successfully")
-    if combine_var.get() == 1:
-        merge_year(main_path, year)
 
 
-def on_submit():
-    location = loc_entry.get()
-    subject = int(subject_combobox.get())
-    year_num = int(year_num_entry.get())
-    paper = (paper_combobox.get())
-    start_year = 2023 - year_num
+def download_task(start_year, year_num, paper, location, subject, subject_name_code, combine, progress_callback):
+    global completed_tasks, total_tasks
+    completed_tasks = 0
+    total_tasks = (year_num + 1) * 7
+    progress_callback(completed_tasks, total_tasks)
 
+    current_year = start_year
     for i in range(year_num + 1):
-        year_download(start_year, paper, location, subject)
-        start_year = start_year + 1
-
-
-# Create the main window
-root = tk.Tk()
-root.title("Download Papers")
-
-# Create and place the labels and entry widgets
-ttk.Label(root, text="Path you would like to store:").grid(column=0, row=0, padx=10, pady=5)
-loc_entry = ttk.Entry(root, width=30)
-loc_entry.grid(column=1, row=0, padx=10, pady=5)
-
-ttk.Label(root, text="Select the subject code:").grid(column=0, row=1, padx=10, pady=5)
-# noinspection PyTypeChecker
-subject_combobox = ttk.Combobox(root, values=[9701, 9702, 9709, 9618, 9231, 9700, 9708], state="readonly")
-subject_combobox.grid(column=1, row=1, padx=10, pady=5)
-subject_combobox.current(0)  # Set default value
-
-ttk.Label(root, text="Number of years (NOTE from 2023 downwards & inclusive):").grid(column=0, row=2, padx=10, pady=5)
-year_num_entry = ttk.Entry(root, width=30)
-year_num_entry.grid(column=1, row=2, padx=10, pady=5)
-
-ttk.Label(root, text="Which paper would you like to store:").grid(column=0, row=3, padx=10, pady=5)
-paper_combobox = ttk.Combobox(root, values=['1', '2', '3', '4', '5'], state="readonly")
-paper_combobox.grid(column=1, row=3, padx=10, pady=5)
-paper_combobox.current(0)  # Set default value
-
-ttk.Label(root, text="Would you like to combine your papers into one file:").grid(column=0, row=4, padx=10, pady=5)
-combine_var = tk.IntVar()
-combine_checkbox = ttk.Checkbutton(root, variable=combine_var)
-combine_checkbox.grid(column=1, row=4, padx=10, pady=5)
-
-# Create and place the submit button
-submit_button = ttk.Button(root, text="Submit", command=on_submit)
-submit_button.grid(column=0, row=5, columnspan=2, pady=10)
-
-# Start the main event loop
-root.mainloop()
+        year_download(current_year, paper, location, subject, subject_name_code, progress_callback)
+        current_year += 1
+    if combine:
+        merge_years(location, subject_name_code, paper, year_num)
+    print("All downloads completed.")
