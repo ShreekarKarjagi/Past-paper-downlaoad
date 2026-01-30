@@ -57,11 +57,6 @@ This project consists of **two main scripts**:
   pip install requests PyPDF2 pillow customtkinter
 
 ---
-## Windows Installer 
-
--Simply download the seteup.exe from the dist folder in this repo and run it to install tbhe application
- 
-___
 ## 📎 Supported Subjects (Built-In)
   - Chemistry (9701)
   - Physics (9702)
@@ -71,3 +66,5 @@ ___
   - Biology (9700)
   - Economics (9708)
 ---
+
+## ⏳ Project release comming soon 
