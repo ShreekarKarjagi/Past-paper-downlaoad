@@ -49,14 +49,6 @@ This project consists of **two main scripts**:
 
 ---
 
-## 🛠️ Requirements
-
-- Python **3.8+**
-- Required libraries:
-  ```bash
-  pip install requests PyPDF2 pillow customtkinter
-
----
 ## 📎 Supported Subjects (Built-In)
   - Chemistry (9701)
   - Physics (9702)
