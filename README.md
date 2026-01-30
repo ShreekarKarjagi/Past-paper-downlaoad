@@ -28,7 +28,7 @@ Built with **CustomTkinter** for the UI and **Requests + PyPDF2** for downloadin
 
 This project consists of **two main scripts**:
 
-### 1️⃣ GUI Application (Frontend)
+1️⃣ GUI Application (Frontend)
 
 - Built using **CustomTkinter**
 - Handles:
@@ -38,7 +38,7 @@ This project consists of **two main scripts**:
   - Combine-PDF option
   - Progress display
 
-### 2️⃣ Downloader & Merger (Backend)
+2️⃣ Downloader & Merger (Backend)
 
 - Uses:
   - `requests` to download PDFs
